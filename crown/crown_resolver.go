@@ -1,6 +1,7 @@
 package crown
 
 import (
+	"log"
 	"time"
 
 	crownd "github.com/pablonlr/go-rpc-crownd"
@@ -20,6 +21,12 @@ func NewCrownResolver(conf config.CrownClientConfig) (*CrownResolver, error) {
 		return nil, err
 	}
 
+	log.Println("trying to connect to crown deamon...")
+	blockCount, err := client.GetBlockCount()
+	if err != nil && blockCount == 0 {
+		return nil, err
+	}
+	log.Println("connected to crown deamon, blockcount: ", blockCount)
 	return &CrownResolver{
 		client:     client,
 		unlockPass: conf.Secrets.UnlockPass,

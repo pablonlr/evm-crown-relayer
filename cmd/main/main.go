@@ -5,35 +5,25 @@ import (
 	"log"
 
 	"github.com/pablonlr/poly-crown-relayer/config"
-	"github.com/pablonlr/poly-crown-relayer/crown"
-	"github.com/pablonlr/poly-crown-relayer/evm"
 	"github.com/pablonlr/poly-crown-relayer/relayer"
 )
 
 func main() {
-	conf, err := config.LoadConfig("../../config.json")
-	if err != nil {
-		panic(err)
-	}
-	crwResolver, err := crown.NewCrownResolver(*conf.CrownClientConf)
+	conf, err := config.LoadConfig("./config.json")
 	if err != nil {
 		panic(err)
 	}
 
-	suscrib, err := evm.NewSuscriberFromConf(*conf.Definitions, *conf.Instances[0].EVM)
+	relayer, err := relayer.NewRelayerFromConf(*conf)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
-	instanc := relayer.NewInstance(suscrib, crwResolver, conf.Instances[0].Crown)
-	err = instanc.ConfigureProtocol()
+	err = relayer.Run(context.Background())
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
-	log.Println("Protocol configured")
-	err = instanc.StartRegistrations(context.Background())
-	if err != nil {
-		panic(err)
-	}
+	block := make(chan struct{})
+	<-block
 
 }

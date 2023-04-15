@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -25,6 +26,7 @@ type CrownRegistrationJob struct {
 	crownProtocolId string
 	txId            string
 	txConfirmations int
+	invalidAddress  bool
 }
 
 func NewCrownRegistrationJob(eventName string, cabi *abi.ABI, vLog *types.Log, crwResolver *crown.CrownResolver, crownProtocol string) (*CrownRegistrationJob, error) {
@@ -83,8 +85,12 @@ func (c *CrownRegistrationJob) GetNextTask(previousTask *rtypes.Task) *rtypes.Ta
 		}
 	case RegisterNFToken:
 		if previousTask.TResult.Err.Err != nil {
+			if previousTask.TResult.Err.Code == rtypes.InvalidCrownAddress {
+				c.invalidAddress = true
+			}
 			return nil
 		}
+
 		txId, ok := previousTask.TResult.ResultValue.(string)
 		if !ok {
 			return nil
@@ -96,10 +102,11 @@ func (c *CrownRegistrationJob) GetNextTask(previousTask *rtypes.Task) *rtypes.Ta
 			ExecParams: []string{"60"},
 		}
 	case WaitConfirmationsTask:
+		txId := strings.Replace(c.txId, "\"", "", -1)
 		return &rtypes.Task{
 			ID:         IsConfirmedNftTx,
 			Exec:       c.crwResolver.NFTokenConfirmed,
-			ExecParams: []string{c.txId},
+			ExecParams: []string{txId},
 		}
 	case IsConfirmedNftTx:
 		if previousTask.TResult.Err.Err != nil {
@@ -127,6 +134,12 @@ func (c *CrownRegistrationJob) TaskCount() int {
 }
 
 func (c *CrownRegistrationJob) Result() *rtypes.JobResult {
+	if c.invalidAddress {
+		return &rtypes.JobResult{
+			Finished: true,
+			Value:    "invalid address",
+		}
+	}
 	if c.txId != "" && c.txConfirmations > 0 {
 		return &rtypes.JobResult{
 			Finished: true,

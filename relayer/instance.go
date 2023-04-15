@@ -3,6 +3,7 @@ package relayer
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/pablonlr/poly-crown-relayer/config"
 	"github.com/pablonlr/poly-crown-relayer/crown"
@@ -12,6 +13,7 @@ import (
 )
 
 type Instance struct {
+	Name         string
 	evmSuscriber *evm.Suscriber
 	contract     evm.Contract
 	crwResolver  *crown.CrownResolver
@@ -20,9 +22,10 @@ type Instance struct {
 	protocolJob  *rtypes.Job
 }
 
-func NewInstance(suscriber *evm.Suscriber, crwResolver *crown.CrownResolver, regConf *config.CrownRegConfig) *Instance {
+func NewInstance(name string, suscriber *evm.Suscriber, crwResolver *crown.CrownResolver, regConf *config.CrownRegConfig) *Instance {
 
 	return &Instance{
+		Name:         name,
 		evmSuscriber: suscriber,
 		contract:     suscriber.GetContract(),
 		crwResolver:  crwResolver,
@@ -53,6 +56,9 @@ func (i *Instance) StartRegistrations(ctx context.Context) error {
 
 	for {
 		select {
+		case <-ctx.Done():
+			log.Printf("Stopping instance %s...", i.Name)
+			return nil
 		case err := <-errChan:
 			return err
 		case log := <-logsChan:
@@ -63,6 +69,7 @@ func (i *Instance) StartRegistrations(ctx context.Context) error {
 			job := rtypes.NewJob(jobs.RegisterNFTokenJob, taskBuilder)
 			i.worker.inputChan <- job
 		}
+
 	}
 
 }

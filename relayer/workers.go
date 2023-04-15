@@ -94,7 +94,7 @@ func (w *Worker) processTask(t *rtypes.Task) error {
 	for i := 0; t.Retry < w.MaxTaskRetry; i++ {
 		log.Println("Processing task", t.ID, "attempt", t.Retry)
 		result := t.Do()
-		if result.Err.Err == nil {
+		if result.Err.Err == nil || result.Err.Skip {
 			return nil
 		}
 

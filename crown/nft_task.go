@@ -51,6 +51,12 @@ func (crw *CrownResolver) RegisterNFToken(params ...string) rtypes.TaskResult {
 	uri := params[3]
 	txId, err := crw.client.RegisterNFToken(protocol, tokenID, owner, owner, uri)
 	if err != nil {
+		//invalid address
+		if err.Code == -8 {
+			return rtypes.TaskResult{
+				Err: rtypes.GetSkipError(rtypes.InvalidCrownAddress, err),
+			}
+		}
 		return rtypes.TaskResult{
 			Err: rtypes.GetError(rtypes.ErrorGetNFToken, err),
 		}

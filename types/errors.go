@@ -9,6 +9,7 @@ const (
 	ErrorGetNFTProtocol
 	ErrorGetBlock
 	ErrorRegisterNFTProtocol
+	InvalidCrownAddress
 )
 
 const (
@@ -25,6 +26,7 @@ var errMap = map[ErrorCode]string{
 	ErrorGetBlock:            "ErrorGetBlock",
 	ErrorRegisterNFTProtocol: "ErrorRegisterNFTProtocol",
 	InvalidWaitTime:          "InvalidWaitTime",
+	InvalidCrownAddress:      "InvalidCrownAddress",
 }
 
 func GetError(errCode ErrorCode, err error) Error {
@@ -32,5 +34,15 @@ func GetError(errCode ErrorCode, err error) Error {
 		Code: errCode,
 		Name: errMap[errCode],
 		Err:  err,
+		Skip: false,
+	}
+}
+
+func GetSkipError(errCode ErrorCode, err error) Error {
+	return Error{
+		Code: errCode,
+		Name: errMap[errCode],
+		Err:  err,
+		Skip: true,
 	}
 }

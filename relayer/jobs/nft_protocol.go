@@ -86,6 +86,7 @@ func (c *CrownProtocolJob) GetNextTask(previousTask *rtypes.Task) *rtypes.Task {
 		if !ok {
 			return nil
 		}
+
 		if confirmations < Protocol_Confirmations_Required {
 			return &rtypes.Task{
 				ID:         WaitConfirmationsTask,

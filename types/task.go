@@ -17,6 +17,7 @@ type Error struct {
 	Code ErrorCode
 	Name string
 	Err  error
+	Skip bool
 }
 
 type ErrorCode int

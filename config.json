@@ -16,13 +16,13 @@
             "name": "TestPolygonToCrownPublicRelayer",
             "evm_config": {
                 "chain_name": "polygon-mumbai",
-                "rpc": "PutYourRpcHere",
-                "contract_address": "0xCB7d76b8C525C4EefC95db4c9D30BeE1A401C1DA",
+                "rpc": "EVM_RPC_HERE",
+                "contract_address": "0x14764DBa4D122A74423Bce0F6108c63E96BCE801",
                 "suscribe_from_block": 0
             },
             "crown_protocol_config": {
-                "protocol_id": "testpolyrel2",
-                "protocol_name": "TestPolyCrownRelayer2",
+                "protocol_id": "testpolysoul",
+                "protocol_name": "TestPolyCRWSoulBound",
                 "protocol_owner_address": "CRWUEscW9vpEt2YoSK26nA2BSMYGfn3FaCmq"
             },
             "retry_job": 3
