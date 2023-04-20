@@ -21,7 +21,7 @@ func (r *Relayer) AddInstance(instance Instance) {
 	r.Instances = append(r.Instances, instance)
 }
 
-func startInstance(i *Instance, ctx context.Context) error {
+func startInstance(i Instance, ctx context.Context) error {
 	err := i.ConfigureProtocol()
 	if err != nil {
 		log.Printf("Error configuring protocol for instance %s, stopping this instance...", i.Name)
@@ -39,7 +39,7 @@ func startInstance(i *Instance, ctx context.Context) error {
 
 func (r *Relayer) Run(ctx context.Context) error {
 	for _, instance := range r.Instances {
-		go startInstance(&instance, ctx)
+		go startInstance(instance, ctx)
 	}
 	return nil
 }

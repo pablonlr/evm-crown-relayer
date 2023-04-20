@@ -20,13 +20,13 @@ func NewCrownResolver(conf config.CrownClientConfig) (*CrownResolver, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	log.Println("trying to connect to crown deamon...")
+	log.Println("trying to connect instance to crown deamon...")
 	blockCount, err := client.GetBlockCount()
 	if err != nil && blockCount == 0 {
 		return nil, err
 	}
-	log.Println("connected to crown deamon, blockcount: ", blockCount)
+	log.Println("instance connected to crown deamon, blockcount: ", blockCount)
+
 	return &CrownResolver{
 		client:     client,
 		unlockPass: conf.Secrets.UnlockPass,
