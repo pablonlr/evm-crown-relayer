@@ -30,7 +30,7 @@ func startInstance(i Instance, ctx context.Context) error {
 	log.Println("Protocol configured for instance: ", i.Name)
 	err = i.StartRegistrations(ctx)
 	if err != nil {
-		log.Printf("Error in execution for instance %s, stopping this instance...", i.Name)
+		log.Printf("Error in execution for instance %s, error %s, stopping this instance...", i.Name, err.Error())
 		return err
 	}
 	return nil
