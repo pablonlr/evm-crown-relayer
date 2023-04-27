@@ -3,6 +3,7 @@ package relayer
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/pablonlr/poly-crown-relayer/config"
 	"github.com/pablonlr/poly-crown-relayer/crown"
@@ -28,12 +29,16 @@ func startInstance(i Instance, ctx context.Context) error {
 		return err
 	}
 	log.Println("Protocol configured for instance: ", i.Name)
-	err = i.StartRegistrations(ctx)
-	if err != nil {
-		log.Printf("Error in execution for instance %s, error %s, stopping this instance...", i.Name, err.Error())
-		return err
+	for {
+		err = i.StartRegistrations(ctx)
+		if err != nil {
+			log.Printf("Error in execution for instance %s, error %s, restarting this instance...", i.Name, err.Error())
+
+			//wait 5 seconds before restarting
+			time.Sleep(5 * time.Second)
+			continue
+		}
 	}
-	return nil
 
 }
 
