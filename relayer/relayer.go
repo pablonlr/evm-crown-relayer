@@ -35,7 +35,6 @@ func startInstance(i Instance, ctx context.Context) error {
 			log.Printf("Error in execution for instance %s, error %s, restarting this instance...", i.Name, err.Error())
 		}
 		time.Sleep(5 * time.Second)
-		continue
 	}
 
 }

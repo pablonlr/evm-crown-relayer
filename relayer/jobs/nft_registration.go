@@ -111,7 +111,7 @@ func (c *CrownRegistrationJob) GetNextTask(previousTask *rtypes.Task) *rtypes.Ta
 			ExecParams: []string{txId},
 		}
 	case IsConfirmedNftTx:
-		if previousTask.TResult.Err.Code == -1 {
+		if strings.HasPrefix("Error -1 : Can't find an NFT record by tx id", previousTask.TResult.Err.Err.Error()) {
 			return &rtypes.Task{
 				ID:         WaitConfirmationsTask,
 				Exec:       WaitTime,
@@ -119,6 +119,7 @@ func (c *CrownRegistrationJob) GetNextTask(previousTask *rtypes.Task) *rtypes.Ta
 			}
 		}
 		if previousTask.TResult.Err.Err != nil {
+			log.Println(previousTask.TResult.Err.Err.Error())
 			return nil
 		}
 		confs, ok := previousTask.TResult.ResultValue.(int)
