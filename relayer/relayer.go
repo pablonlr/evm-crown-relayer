@@ -33,11 +33,9 @@ func startInstance(i Instance, ctx context.Context) error {
 		err = i.StartRegistrations(ctx)
 		if err != nil {
 			log.Printf("Error in execution for instance %s, error %s, restarting this instance...", i.Name, err.Error())
-
-			//wait 5 seconds before restarting
-			time.Sleep(5 * time.Second)
-			continue
 		}
+		time.Sleep(5 * time.Second)
+		continue
 	}
 
 }

@@ -111,6 +111,13 @@ func (c *CrownRegistrationJob) GetNextTask(previousTask *rtypes.Task) *rtypes.Ta
 			ExecParams: []string{txId},
 		}
 	case IsConfirmedNftTx:
+		if previousTask.TResult.Err.Code == -1 {
+			return &rtypes.Task{
+				ID:         WaitConfirmationsTask,
+				Exec:       WaitTime,
+				ExecParams: []string{"60"},
+			}
+		}
 		if previousTask.TResult.Err.Err != nil {
 			return nil
 		}
