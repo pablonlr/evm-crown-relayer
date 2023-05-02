@@ -3,6 +3,7 @@ package jobs
 import (
 	"crypto/sha256"
 	"fmt"
+	"log"
 	"math/big"
 	"strings"
 
@@ -86,6 +87,7 @@ func (c *CrownRegistrationJob) GetNextTask(previousTask *rtypes.Task) *rtypes.Ta
 	case RegisterNFToken:
 		if previousTask.TResult.Err.Err != nil {
 			if previousTask.TResult.Err.Code == rtypes.InvalidCrownAddress {
+				log.Println(previousTask.TResult.Err.Err.Error())
 				c.invalidAddress = true
 			}
 			return nil
