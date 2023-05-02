@@ -87,7 +87,7 @@ func (c *CrownRegistrationJob) GetNextTask(previousTask *rtypes.Task) *rtypes.Ta
 	case RegisterNFToken:
 		if previousTask.TResult.Err.Err != nil {
 			if previousTask.TResult.Err.Code == rtypes.InvalidCrownAddress {
-				log.Println(previousTask.TResult.Err.Err.Error())
+				log.Println(previousTask.TResult.Err.Err.Error(), c.event.CrwAddress)
 				c.invalidAddress = true
 			}
 			return nil
