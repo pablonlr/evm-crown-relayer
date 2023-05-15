@@ -11,7 +11,7 @@ import (
 	"github.com/pablonlr/poly-crown-relayer/config"
 )
 
-const testABI = `[{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"tokenID","type":"uint256"},{"indexed":false,"internalType":"string","name":"uri","type":"string"},{"indexed":false,"internalType":"string","name":"crwAddress","type":"string"}],"name":"CrownRegistration","type":"event"}]`
+const testABI = `[{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"emisor","type":"address"},{"indexed":true,"internalType":"uint256","name":"tokenID","type":"uint256"},{"indexed":false,"internalType":"string","name":"uri","type":"string"},{"indexed":false,"internalType":"string","name":"crwAddress","type":"string"}],"name":"CrownRegistration","type":"event"}]`
 
 func getRPC() (rpc string) {
 	rpc = os.Getenv("TEST_RPC")
@@ -19,13 +19,13 @@ func getRPC() (rpc string) {
 }
 
 func TestGetLogsToBlockN(t *testing.T) {
-	contractAddress := "0xCB7d76b8C525C4EefC95db4c9D30BeE1A401C1DA"
+	contractAddress := "0x6765dD5E93a93B85F626246816a5C703848ED512"
 	polygonRPC := getRPC()
 	if len(polygonRPC) < 1 {
 		log.Fatalf("Please set up enviroment variable TEST_RPC")
 	}
 	log.Println(polygonRPC)
-	eventHex := "0xdaa2dbe0deba8671ce45936bb34dae41efc232dcccb282c8b02f42500ecbf432"
+	eventHex := "0x32abe70a521c5c3431eb1ac5dfd23738bae8e0a25afde8918617300bb9c379ca"
 	contractAbi, err := abi.JSON(strings.NewReader(string(testABI)))
 	if err != nil {
 		log.Fatal(err)

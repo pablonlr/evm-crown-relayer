@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	crownd "github.com/pablonlr/go-rpc-crownd"
 	"github.com/pablonlr/poly-crown-relayer/crown"
@@ -15,6 +16,7 @@ import (
 )
 
 type CrownRegEvent struct {
+	Emisor     common.Address
 	TokenID    *big.Int
 	Uri        string
 	CrwAddress string
