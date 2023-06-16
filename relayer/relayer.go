@@ -22,19 +22,25 @@ func (r *Relayer) AddInstance(instance Instance) {
 	r.Instances = append(r.Instances, instance)
 }
 
-func startInstance(i Instance, ctx context.Context) error {
-	err := i.ConfigureProtocol()
-	if err != nil {
-		log.Printf("Error configuring protocol for instance %s, stopping this instance...", i.Name)
-		return err
-	}
-	log.Println("Protocol configured for instance: ", i.Name)
+func startInstance(i Instance, ctx context.Context) {
 	for {
-		err = i.StartRegistrations(ctx)
-		if err != nil {
-			log.Printf("Error in execution for instance %s, error %s, restarting this instance...", i.Name, err.Error())
+		select {
+		case <-ctx.Done():
+			log.Println("Context done, stopping instance:", i.Name)
+			return
+		default:
+			if err := i.ConfigureProtocol(); err != nil {
+				log.Printf("Error configuring protocol for instance %s, stopping this instance...", i.Name)
+				time.Sleep(5 * time.Second)
+				continue
+			}
+			log.Println("Protocol configured for instance: ", i.Name)
+
+			if err := i.StartRegistrations(ctx); err != nil {
+				log.Printf("Error in execution for instance %s, error %s, restarting this instance...", i.Name, err.Error())
+				time.Sleep(5 * time.Second)
+			}
 		}
-		time.Sleep(5 * time.Second)
 	}
 
 }

@@ -19,7 +19,7 @@ func getRPC() (rpc string) {
 }
 
 func TestGetLogsToBlockN(t *testing.T) {
-	contractAddress := "0x6765dD5E93a93B85F626246816a5C703848ED512"
+	contractAddress := "0xE856B7Bdc52F86e97f6197A825f505f17046589d"
 	polygonRPC := getRPC()
 	if len(polygonRPC) < 1 {
 		log.Fatalf("Please set up enviroment variable TEST_RPC")

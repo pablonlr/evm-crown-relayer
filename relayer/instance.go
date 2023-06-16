@@ -48,7 +48,7 @@ func (i *Instance) StartRegistrations(ctx context.Context) error {
 	if !i.protocolJob.Tasks.Result().Finished {
 		return fmt.Errorf("protocol job not completed")
 	}
-	logsChan, errChan, err := i.evmSuscriber.GetPastLogsAndSuscribeToFutureLogs()
+	logsChan, errChan, err := i.evmSuscriber.GetPastLogsAndSuscribeToFutureLogs(ctx)
 	if err != nil {
 		return err
 	}
@@ -61,13 +61,19 @@ func (i *Instance) StartRegistrations(ctx context.Context) error {
 			return nil
 		case err := <-errChan:
 			return err
-		case log := <-logsChan:
-			taskBuilder, err := jobs.NewCrownRegistrationJob(i.evmSuscriber.GetEventName(), i.contract.GetAbi(), &log, i.crwResolver, i.protoDetails.ProtocolID)
+		case lg := <-logsChan:
+			taskBuilder, err := jobs.NewCrownRegistrationJob(i.evmSuscriber.GetEventName(), i.contract.GetAbi(), &lg, i.crwResolver, i.protoDetails.ProtocolID)
 			if err != nil {
 				return err
 			}
 			job := rtypes.NewJob(jobs.RegisterNFTokenJob, taskBuilder)
-			i.worker.inputChan <- job
+
+			select {
+			case i.worker.inputChan <- job:
+			default:
+				log.Printf("Failed to send job to worker in instance %s: worker input channel closed", i.Name)
+				return fmt.Errorf("worker input channel closed")
+			}
 		}
 
 	}

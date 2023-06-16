@@ -161,7 +161,6 @@ func (c *CrownRegistrationJob) Result() *rtypes.JobResult {
 	return &rtypes.JobResult{
 		Finished: false,
 	}
-
 }
 
 func hash(value string) string {

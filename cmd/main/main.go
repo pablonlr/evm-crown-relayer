@@ -18,12 +18,14 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	err = relayer.Run(context.Background())
+	err = relayer.Run(ctx)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	block := make(chan struct{})
-	<-block
+	for {
+	}
 
 }

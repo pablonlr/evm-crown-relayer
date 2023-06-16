@@ -59,7 +59,7 @@ func (s *Suscriber) GetLogsToBlockN(toBlock *big.Int) ([]types.Log, error) {
 	return s.resolver.client.FilterLogs(context.Background(), query)
 }
 
-func (s *Suscriber) GetPastLogsAndSuscribeToFutureLogs() (chan types.Log, <-chan error, error) {
+func (s *Suscriber) GetPastLogsAndSuscribeToFutureLogs(ctx context.Context) (chan types.Log, <-chan error, error) {
 	query := s.getNewQuery(nil)
 	out := make(chan types.Log)
 	currentH, err := s.resolver.CurrentBlockHeight()
@@ -85,28 +85,33 @@ func (s *Suscriber) GetPastLogsAndSuscribeToFutureLogs() (chan types.Log, <-chan
 
 	// Subscribe to future logs
 	futureLogs := make(chan types.Log)
-	sub, err := s.resolver.client.SubscribeFilterLogs(context.Background(), query, futureLogs)
+	sub, err := s.resolver.client.SubscribeFilterLogs(ctx, query, futureLogs)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	errChan := make(chan error)
 	go func() {
+
+		defer close(errChan)
+		defer close(out)
+
 		// wait for the past logs to be sent
 		<-syncCh
 
 		for {
 			select {
+			case <-ctx.Done():
+				errChan <- ctx.Err()
+				return
 			case log, ok := <-futureLogs:
 				if ok {
 					out <- log
 				} else {
-					close(out)
 					return
 				}
 			case err := <-sub.Err():
-				errChan <- fmt.Errorf("error while suscribing to future logs: %v", err)
-				close(out)
+				errChan <- fmt.Errorf("error while subscribing to future logs: %v", err)
 				return
 			}
 		}
