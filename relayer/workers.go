@@ -65,7 +65,7 @@ func (w *Worker) ProcessJob(job *rtypes.Job) error {
 		wait := w.waitOnJobFailed * time.Duration(job.Retry)
 
 		//log.Printf("Worker %d will retry job %d after %s\n", w.ID, job.ID, wait)
-		log.Printf("Worker %d encountered an error processing job %s (attempt %d of %d): %s\n", w.ID, job.ID, job.Retry, w.MaxJobsRetries, err.Error())
+		log.Printf("error processing job %s (attempt %d of %d): %s\n", job.ID, job.Retry, w.MaxJobsRetries, err.Error())
 
 		time.Sleep(wait)
 

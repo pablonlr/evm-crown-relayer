@@ -2,8 +2,9 @@ package evm
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -83,16 +84,10 @@ func (s *Suscriber) GetPastLogsAndSuscribeToFutureLogs(ctx context.Context) (cha
 		close(syncCh)
 	}()
 
-	// Subscribe to future logs
 	futureLogs := make(chan types.Log)
-	sub, err := s.resolver.client.SubscribeFilterLogs(ctx, query, futureLogs)
-	if err != nil {
-		return nil, nil, err
-	}
-
 	errChan := make(chan error)
-	go func() {
 
+	go func() {
 		defer close(errChan)
 		defer close(out)
 
@@ -100,19 +95,33 @@ func (s *Suscriber) GetPastLogsAndSuscribeToFutureLogs(ctx context.Context) (cha
 		<-syncCh
 
 		for {
-			select {
-			case <-ctx.Done():
-				errChan <- ctx.Err()
-				return
-			case log, ok := <-futureLogs:
-				if ok {
-					out <- log
-				} else {
+			sub, err := s.resolver.client.SubscribeFilterLogs(ctx, query, futureLogs)
+			if err != nil {
+				log.Printf("error al suscribirse a los logs futuros: %v", err)
+				select {
+				case <-ctx.Done():
+					errChan <- ctx.Err()
 					return
+				case <-time.After(5 * time.Second): // espera antes de intentar de nuevo
+					continue
 				}
-			case err := <-sub.Err():
-				errChan <- fmt.Errorf("error while subscribing to future logs: %v", err)
-				return
+			}
+			defer sub.Unsubscribe()
+
+			for {
+				select {
+				case err := <-sub.Err():
+					log.Printf("error en la suscripción: %v", err)
+					select {
+					case <-ctx.Done():
+						errChan <- ctx.Err()
+						return
+					case <-time.After(5 * time.Second): // espera antes de intentar de nuevo
+						break // salir del bucle interno para recrear la suscripción
+					}
+				case log := <-futureLogs:
+					out <- log
+				}
 			}
 		}
 	}()

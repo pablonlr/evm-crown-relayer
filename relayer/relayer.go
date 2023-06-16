@@ -37,7 +37,7 @@ func startInstance(i Instance, ctx context.Context) {
 			log.Println("Protocol configured for instance: ", i.Name)
 
 			if err := i.StartRegistrations(ctx); err != nil {
-				log.Printf("Error in execution for instance %s, error %s, restarting this instance...", i.Name, err.Error())
+				log.Printf("Error in execution for instance %s, %s, restarting this instance...", i.Name, err.Error())
 				time.Sleep(5 * time.Second)
 			}
 		}
