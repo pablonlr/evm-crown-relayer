@@ -91,7 +91,6 @@ func (s *Suscriber) GetPastLogsAndSuscribeToFutureLogs(ctx context.Context) (cha
 		defer close(errChan)
 		defer close(out)
 
-		// wait for the past logs to be sent
 		<-syncCh
 
 		for {
@@ -102,7 +101,7 @@ func (s *Suscriber) GetPastLogsAndSuscribeToFutureLogs(ctx context.Context) (cha
 				case <-ctx.Done():
 					errChan <- ctx.Err()
 					return
-				case <-time.After(5 * time.Second): // espera antes de intentar de nuevo
+				case <-time.After(5 * time.Second): 
 					continue
 				}
 			}
@@ -116,8 +115,8 @@ func (s *Suscriber) GetPastLogsAndSuscribeToFutureLogs(ctx context.Context) (cha
 					case <-ctx.Done():
 						errChan <- ctx.Err()
 						return
-					case <-time.After(5 * time.Second): // espera antes de intentar de nuevo
-						break // salir del bucle interno para recrear la suscripción
+					case <-time.After(5 * time.Second): 
+						break 
 					}
 				case log := <-futureLogs:
 					out <- log
