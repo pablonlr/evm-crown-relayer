@@ -43,7 +43,7 @@ func TestGetLogsToBlockN(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	logs, err := suscrib.GetLogsToBlockN(currentH)
+	logs, err := suscrib.GetLogsFromBlockMToBlockN(suscrib.indexedFromBlock, currentH)
 	if err != nil {
 		panic(err)
 	}
@@ -65,7 +65,7 @@ func TestGetLogsToBlockNFromConfFile(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	logs, err := suscrib.GetLogsToBlockN(currentH)
+	logs, err := suscrib.GetLogsFromBlockMToBlockN(suscrib.indexedFromBlock, currentH)
 	if err != nil {
 		panic(err)
 	}

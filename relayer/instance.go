@@ -48,7 +48,7 @@ func (i *Instance) StartRegistrations(ctx context.Context) error {
 	if !i.protocolJob.Tasks.Result().Finished {
 		return fmt.Errorf("protocol job not completed")
 	}
-	logsChan, errChan, err := i.evmSuscriber.GetPastLogsAndSuscribeToFutureLogs(ctx)
+	logsChan, errChan, err := i.evmSuscriber.GetPastLogsAndSuscribeToFutureLogsRest(ctx)
 	if err != nil {
 		return err
 	}
