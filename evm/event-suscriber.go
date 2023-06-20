@@ -13,6 +13,7 @@ import (
 )
 
 const RestFetchWait = 120
+const RestDefaultBlockRange = 10000
 
 type Suscriber struct {
 	eventHash        common.Hash
@@ -57,9 +58,26 @@ func NewSuscriberFromConf(solDef config.SolDefinitions, evmConfig config.EVMconf
 	}, nil
 }
 
-func (s *Suscriber) GetLogsFromBlockMToBlockN(fromBlock, toBlock *big.Int) ([]types.Log, error) {
-	query := s.getNewQuery(fromBlock, toBlock)
-	return s.resolver.client.FilterLogs(context.Background(), query)
+func (s *Suscriber) GetLogsFromBlockMToBlockN(ctx context.Context, fromBlock, toBlock *big.Int) ([]types.Log, error) {
+	var allLogs []types.Log
+
+	blockRange := big.NewInt(RestDefaultBlockRange)
+	for currentFrom := new(big.Int).Set(fromBlock); currentFrom.Cmp(toBlock) < 0; currentFrom.Add(currentFrom, blockRange) {
+		currentTo := new(big.Int).Add(currentFrom, blockRange)
+		if currentTo.Cmp(toBlock) > 0 {
+			currentTo = toBlock
+		}
+
+		query := s.getNewQuery(currentFrom, currentTo)
+		logs, err := s.resolver.client.FilterLogs(ctx, query)
+		if err != nil {
+			return nil, err
+		}
+
+		allLogs = append(allLogs, logs...)
+	}
+
+	return allLogs, nil
 }
 
 // Rest implementation of suscribe filter logs query
@@ -69,7 +87,7 @@ func (s *Suscriber) GetPastLogsAndSuscribeToFutureLogsRest(ctx context.Context) 
 		return nil, nil, err
 	}
 	out := make(chan types.Log)
-	logs, err := s.GetLogsFromBlockMToBlockN(s.indexedFromBlock, currentH)
+	logs, err := s.GetLogsFromBlockMToBlockN(ctx, s.indexedFromBlock, currentH)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -106,7 +124,7 @@ func (s *Suscriber) GetPastLogsAndSuscribeToFutureLogsRest(ctx context.Context) 
 				}
 				if newH.Cmp(currentH) > 0 {
 					nextBlock := new(big.Int).Add(currentH, big.NewInt(1))
-					newLogs, err := s.GetLogsFromBlockMToBlockN(nextBlock, newH)
+					newLogs, err := s.GetLogsFromBlockMToBlockN(ctx, nextBlock, newH)
 					if err != nil {
 						errChan <- err
 						return
@@ -131,7 +149,7 @@ func (s *Suscriber) GetPastLogsAndSuscribeToFutureLogs(ctx context.Context) (cha
 	if err != nil {
 		return nil, nil, err
 	}
-	logs, err := s.GetLogsFromBlockMToBlockN(s.indexedFromBlock, currentH)
+	logs, err := s.GetLogsFromBlockMToBlockN(ctx, s.indexedFromBlock, currentH)
 	if err != nil {
 		return nil, nil, err
 	}

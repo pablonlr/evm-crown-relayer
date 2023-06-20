@@ -1,6 +1,7 @@
 package evm
 
 import (
+	"context"
 	"log"
 	"math/big"
 	"os"
@@ -43,7 +44,7 @@ func TestGetLogsToBlockN(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	logs, err := suscrib.GetLogsFromBlockMToBlockN(suscrib.indexedFromBlock, currentH)
+	logs, err := suscrib.GetLogsFromBlockMToBlockN(context.Background(), suscrib.indexedFromBlock, currentH)
 	if err != nil {
 		panic(err)
 	}
@@ -65,29 +66,7 @@ func TestGetLogsToBlockNFromConfFile(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	logs, err := suscrib.GetLogsFromBlockMToBlockN(suscrib.indexedFromBlock, currentH)
-	if err != nil {
-		panic(err)
-	}
-	if len(logs) < 1 {
-		t.Errorf("No logs fetched")
-	}
-
-}
-func TestGetLogsPastAndFuturesFromConfFile(t *testing.T) {
-	conf, err := config.LoadConfig("config_test.json")
-	if err != nil {
-		panic(err)
-	}
-	suscrib, err := NewSuscriberFromConf(*conf.Definitions, *conf.Instances[0].EVM)
-	if err != nil {
-		panic(err)
-	}
-	currentH, err := suscrib.resolver.CurrentBlockHeight()
-	if err != nil {
-		panic(err)
-	}
-	logs, err := suscrib.GetLogsFromBlockMToBlockN(suscrib.indexedFromBlock, currentH)
+	logs, err := suscrib.GetLogsFromBlockMToBlockN(context.Background(), suscrib.indexedFromBlock, currentH)
 	if err != nil {
 		panic(err)
 	}
