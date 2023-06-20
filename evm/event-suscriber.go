@@ -12,6 +12,8 @@ import (
 	"github.com/pablonlr/poly-crown-relayer/config"
 )
 
+const RestFetchWait = 120
+
 type Suscriber struct {
 	eventHash        common.Hash
 	eventName        string
@@ -55,19 +57,81 @@ func NewSuscriberFromConf(solDef config.SolDefinitions, evmConfig config.EVMconf
 	}, nil
 }
 
-func (s *Suscriber) GetLogsToBlockN(toBlock *big.Int) ([]types.Log, error) {
-	query := s.getNewQuery(toBlock)
+func (s *Suscriber) GetLogsFromBlockMToBlockN(fromBlock, toBlock *big.Int) ([]types.Log, error) {
+	query := s.getNewQuery(fromBlock, toBlock)
 	return s.resolver.client.FilterLogs(context.Background(), query)
 }
 
+// Rest implementation of suscribe filter logs query
+func (s *Suscriber) GetPastLogsAndSuscribeToFutureLogsRest(ctx context.Context) (chan types.Log, <-chan error, error) {
+	currentH, err := s.resolver.CurrentBlockHeight()
+	if err != nil {
+		return nil, nil, err
+	}
+	out := make(chan types.Log)
+	logs, err := s.GetLogsFromBlockMToBlockN(s.indexedFromBlock, currentH)
+	if err != nil {
+		return nil, nil, err
+	}
+	//sync channel to send the signal when the past logs are sent
+	syncCh := make(chan struct{})
+
+	// Send past logs to the channel
+	go func() {
+		for _, log := range logs {
+			out <- log
+		}
+
+		close(syncCh)
+	}()
+
+	errChan := make(chan error)
+	go func() {
+		defer close(errChan)
+		defer close(out)
+
+		<-syncCh
+
+		for {
+			select {
+			case <-ctx.Done():
+				errChan <- ctx.Err()
+				return
+			case <-time.After(RestFetchWait * time.Second):
+				// Fetch latest block height
+				newH, err := s.resolver.CurrentBlockHeight()
+				if err != nil {
+					errChan <- err
+					return
+				}
+				if newH.Cmp(currentH) > 0 {
+					nextBlock := new(big.Int).Add(currentH, big.NewInt(1))
+					newLogs, err := s.GetLogsFromBlockMToBlockN(nextBlock, newH)
+					if err != nil {
+						errChan <- err
+						return
+					}
+					for _, log := range newLogs {
+						out <- log
+					}
+					currentH = newH
+				}
+			}
+		}
+	}()
+
+	return out, errChan, nil
+
+}
+
 func (s *Suscriber) GetPastLogsAndSuscribeToFutureLogs(ctx context.Context) (chan types.Log, <-chan error, error) {
-	query := s.getNewQuery(nil)
+	query := s.getNewQuery(s.indexedFromBlock, nil)
 	out := make(chan types.Log)
 	currentH, err := s.resolver.CurrentBlockHeight()
 	if err != nil {
 		return nil, nil, err
 	}
-	logs, err := s.GetLogsToBlockN(currentH)
+	logs, err := s.GetLogsFromBlockMToBlockN(s.indexedFromBlock, currentH)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -101,7 +165,7 @@ func (s *Suscriber) GetPastLogsAndSuscribeToFutureLogs(ctx context.Context) (cha
 				case <-ctx.Done():
 					errChan <- ctx.Err()
 					return
-				case <-time.After(5 * time.Second): 
+				case <-time.After(5 * time.Second):
 					continue
 				}
 			}
@@ -115,8 +179,8 @@ func (s *Suscriber) GetPastLogsAndSuscribeToFutureLogs(ctx context.Context) (cha
 					case <-ctx.Done():
 						errChan <- ctx.Err()
 						return
-					case <-time.After(5 * time.Second): 
-						break 
+					case <-time.After(5 * time.Second):
+						break
 					}
 				case log := <-futureLogs:
 					out <- log
@@ -128,9 +192,9 @@ func (s *Suscriber) GetPastLogsAndSuscribeToFutureLogs(ctx context.Context) (cha
 	return out, errChan, nil
 }
 
-func (s *Suscriber) getNewQuery(to *big.Int) ethereum.FilterQuery {
+func (s *Suscriber) getNewQuery(from *big.Int, to *big.Int) ethereum.FilterQuery {
 	return ethereum.FilterQuery{
-		FromBlock: s.indexedFromBlock,
+		FromBlock: from,
 		ToBlock:   to,
 		Addresses: []common.Address{
 			s.contract.contractAddress,
